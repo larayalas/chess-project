@@ -25,7 +25,7 @@ MoveResult MoveValidator::isValidMove(const Position &from, const Position &to)
 //    std::cout << piece->getPosition().y << std::endl;
 
     // Taşın hareket özelliklerini yazdır (debug için)
-    Movement mov = piece->getMovement();
+//    Movement mov = piece->getMovement();
 //    std::cout << "  Hareket: ";
 //    if (mov.forward > 0)
 //        std::cout << "İleri: " << mov.forward << " ";
@@ -63,19 +63,14 @@ MoveResult MoveValidator::isValidMove(const Position &from, const Position &to)
     std::string fromStr = from.toString();
     std::string toStr = to.toString();
     
-    // moveCache'de from pozisyonu var mı kontrol et
-    if (moveCache.find(fromStr) == moveCache.end()) {
-        updateMoveCache(); // Cache güncel değilse güncelle
-    }
-    
-    // From pozisyonu için tüm edge'leri kontrol et
-    for (const auto& edge : moveCache[fromStr]) {
-        if (edge.to == toStr) {
-            // Hedef pozisyon bulundu, sonucunu döndür
-            return edge.result;
+    auto edge = edgeSquareCache[toStr];
+    std::cout << "edge: " << edge.size() << std::endl;
+    for(auto e : edge) {
+        std::cout << "edge: " << e.from << " " << int(e.result) << std::endl;
+        if(e.from == fromStr) {
+            return e.result;
         }
     }
-    
     // Eğer edge bulunamadıysa, geçersiz hareket
     return MoveResult::InvalidMovePattern;
 }
@@ -179,7 +174,6 @@ void MoveValidator::updateEdgeMoveCache(const Position &from, const Position &to
     
     // edgeSquareCache'e eklenecek kayıt için temel bilgiler
     if(edge_node->type == EdgeType::is_free) {
-        edge_node->result = MoveResult::ValidMove;
         
         // EdgeSquare oluştur - bu kareye hangi taşın gelebileceğini gösterir
         EdgeSquare edgeSquare;
@@ -205,7 +199,6 @@ void MoveValidator::updateEdgeMoveCache(const Position &from, const Position &to
         
         // Dost taşı koruma
         edgeSquareCache[toStr].push_back(edgeSquare);
-        edge_node->result = MoveResult::FriendlyPieceBlocking;
     }
     
     if(edge_node->type == EdgeType::is_enemy) {
@@ -218,7 +211,6 @@ void MoveValidator::updateEdgeMoveCache(const Position &from, const Position &to
         
         // Düşman taşını tehdit etme
         edgeSquareCache[toStr].push_back(edgeSquare);
-        edge_node->result = MoveResult::EnemyPieceCapturable;
     }
     
     // Taşın hareket tipleri için rekürsif çağrıları yeniden düzenleyelim
@@ -229,7 +221,7 @@ void MoveValidator::updateEdgeMoveCache(const Position &from, const Position &to
     Position nextPos = to;
     
     // İleri hareket 
-    if (mov.forward > 0) {
+    if (mov.forward > depth) {
         Position newPos = {nextPos.x , nextPos.y + 1};
         Position newPos2 = {nextPos.x , nextPos.y - 1};
         if (board->isValidPosition(newPos) && !visitedPaths[toStr][newPos.toString()]) {
@@ -239,9 +231,8 @@ void MoveValidator::updateEdgeMoveCache(const Position &from, const Position &to
             updateEdgeMoveCache(to, newPos2, depth + 1);
         }
     }
-    
     // Yanlara hareket
-    if (mov.sideways > 0) {
+    if (mov.sideways > depth) {
         Position newPosRight = {nextPos.x + 1, nextPos.y };
         Position newPosLeft = {nextPos.x - 1, nextPos.y };
         if (board->isValidPosition(newPosRight) && !visitedPaths[toStr][newPosRight.toString()]) {
@@ -251,9 +242,10 @@ void MoveValidator::updateEdgeMoveCache(const Position &from, const Position &to
             updateEdgeMoveCache(to, newPosLeft, depth + 1);
         }
     }
+/*
     
     // Çapraz hareket
-    if (mov.diagonal > 0) {
+    if (mov.diagonal > depth) {
         Position newPosDiag1 = {nextPos.x + 1, nextPos.y + 1};
         Position newPosDiag2 = {nextPos.x + 1, nextPos.y - 1};
         Position newPosDiag3 = {nextPos.x - 1, nextPos.y + 1};
@@ -287,6 +279,7 @@ void MoveValidator::updateEdgeMoveCache(const Position &from, const Position &to
             }
         }
     }
+*/    
 
 }
 
