@@ -242,7 +242,6 @@ void MoveValidator::updateEdgeMoveCache(const Position &from, const Position &to
             updateEdgeMoveCache(to, newPosLeft, depth + 1);
         }
     }
-/*
     
     // Çapraz hareket
     if (mov.diagonal > depth) {
@@ -266,7 +265,7 @@ void MoveValidator::updateEdgeMoveCache(const Position &from, const Position &to
     }
     
     // L şekli hareket (at)
-    if (mov.l_shape && depth < 2) {
+    if (mov.l_shape && depth < 1) {
         const std::array<std::pair<int, int>, 8> knightMoves = {{
             {2, 1}, {2, -1}, {-2, 1}, {-2, -1},
             {1, 2}, {1, -2}, {-1, 2}, {-1, -2}
@@ -279,7 +278,6 @@ void MoveValidator::updateEdgeMoveCache(const Position &from, const Position &to
             }
         }
     }
-*/    
 
 }
 
