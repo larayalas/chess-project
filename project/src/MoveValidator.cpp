@@ -3,6 +3,8 @@
 #include <iostream>
 #include <array>
 
+static std::unordered_map<std::string, std::unordered_map<std::string, bool>> visitedPaths;
+
 MoveValidator::MoveValidator(std::shared_ptr<ChessBoard> chessBoard) {
     board = chessBoard;
     updateMoveCache();
@@ -135,7 +137,6 @@ void MoveValidator::updateEdgeMoveCache(const Position &from, const Position &to
     std::string toStr = to.toString();
     
     // Ziyaret edilen pozisyonları takip edelim
-    static std::unordered_map<std::string, std::unordered_map<std::string, bool>> visitedPaths;
     
     // Bu yol daha önce ziyaret edilmiş mi?
     if (visitedPaths[fromStr][toStr]) {
@@ -227,18 +228,22 @@ void MoveValidator::updateEdgeMoveCache(const Position &from, const Position &to
     // Recursive çağrıları mevcut pozisyondan değil, hedef pozisyondan yapıyoruz
     Position nextPos = to;
     
-    // İleri hareket
+    // İleri hareket 
     if (mov.forward > 0) {
-        Position newPos = {nextPos.x + mov.forward, nextPos.y};
+        Position newPos = {nextPos.x , nextPos.y + 1};
+        Position newPos2 = {nextPos.x , nextPos.y - 1};
         if (board->isValidPosition(newPos) && !visitedPaths[toStr][newPos.toString()]) {
             updateEdgeMoveCache(to, newPos, depth + 1);
+        }
+        if (board->isValidPosition(newPos2) && !visitedPaths[toStr][newPos2.toString()]) {
+            updateEdgeMoveCache(to, newPos2, depth + 1);
         }
     }
     
     // Yanlara hareket
     if (mov.sideways > 0) {
-        Position newPosRight = {nextPos.x, nextPos.y + 1};
-        Position newPosLeft = {nextPos.x, nextPos.y - 1};
+        Position newPosRight = {nextPos.x + 1, nextPos.y };
+        Position newPosLeft = {nextPos.x - 1, nextPos.y };
         if (board->isValidPosition(newPosRight) && !visitedPaths[toStr][newPosRight.toString()]) {
             updateEdgeMoveCache(to, newPosRight, depth + 1);
         }
@@ -282,12 +287,12 @@ void MoveValidator::updateEdgeMoveCache(const Position &from, const Position &to
             }
         }
     }
+
 }
 
 // Hareket cache'ini güncelle
 void MoveValidator::updateMoveCache() {
     // Her cache güncellemede ziyaret yollarını temizle
-    static std::unordered_map<std::string, std::unordered_map<std::string, bool>> visitedPaths;
     visitedPaths.clear();
     
     // Cache'leri temizle
