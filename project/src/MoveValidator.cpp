@@ -279,6 +279,13 @@ void MoveValidator::updateEdgeMoveCache(const Position &from, const Position &to
         }
     }
 
+    if(mov.first_move_forward && (piece->getColor() == "white" ? nextPos.y == 1 : nextPos.y == 6)) {
+        Position newPos = {nextPos.x , nextPos.y + 2 * (piece->getColor() == "white" ? 1 : -1)};
+        if (board->isValidPosition(newPos) && !visitedPaths[toStr][newPos.toString()]) {
+            updateEdgeMoveCache(to, newPos, depth + 1);
+        }
+    }
+    
 }
 
 // Hareket cache'ini güncelle
