@@ -155,6 +155,8 @@ bool MoveValidator::isDepthBranchActive(const MoveDepth& d, const std::string& c
 }
 
 void MoveValidator::updateEdgeMoveCache(const Position &from, const Position &to, const MoveDepth &moveDepth) {
+    // harita dışı ise direk return
+    if(to.x < 0 || to.x >= board->getBoardSize() || to.y < 0 || to.y >= board->getBoardSize()) return;
     // Maksimum derinlik kontrolü ekleyelim
     if (moveDepth.forward > 1000 || moveDepth.sideways > 1000 || moveDepth.diagonal > 1000) {
         std::cout << "Maksimum derinliğe ulaşıldı: " << from.toString() << " -> " << to.toString() << std::endl;
@@ -165,6 +167,7 @@ void MoveValidator::updateEdgeMoveCache(const Position &from, const Position &to
     std::shared_ptr<chessPieces> piece = board->getPieceAt(from);
     if (!piece) return;
 
+    // harita dışı ise direk return
     if(to.x < 0 || to.x >= board->getBoardSize() || to.y < 0 || to.y >= board->getBoardSize()) return;
 
     std::string fromStr = from.toString();
@@ -275,7 +278,6 @@ void MoveValidator::updateEdgeMoveCache(const Position &from, const Position &to
     if (mov.forward > moveDepth.forward && isDepthBranchActive(moveDepth, "forward") && (edge_node->type == EdgeType::is_free || edge_node->type == EdgeType::is_enemy || edge_node->type == EdgeType::is_me)) {
         Position newPos = {from.x , from.y + moveDepth.forward + 1};
         Position newPos2 = {from.x , from.y - moveDepth.forward - 1};
-        std::cout << "ileri hareket: " << from.toString() << " " << newPos.toString() << " " << newPos2.toString() << std::endl;
         // Yeni derinlik değerlerini hesapla
         MoveDepth newDepth = moveDepth;
         newDepth.forward += 1;
@@ -297,7 +299,6 @@ void MoveValidator::updateEdgeMoveCache(const Position &from, const Position &to
         newDepth.sideways += 1;
         
         if (board->isValidPosition(newPosRight) && !visitedPaths[fromStr][newPosRight.toString()]) {
-            // Yana hareket için derinliği artır
             updateEdgeMoveCache(from, newPosRight, newDepth);
         }
         if (board->isValidPosition(newPosLeft) && !visitedPaths[fromStr][newPosLeft.toString()]) {
