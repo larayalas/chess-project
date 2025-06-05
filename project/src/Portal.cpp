@@ -8,6 +8,8 @@ Portal::Portal(Position entry, Position exit, bool preserve_direction, std::vect
     this->allowed_colors = allowed_colors;
     this->cooldown = cooldown;
 }
+// cooldown azaltma
+// cooldown hangi şartlarda azalır.
 
 Portal::~Portal()
 {

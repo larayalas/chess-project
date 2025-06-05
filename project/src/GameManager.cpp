@@ -1,6 +1,8 @@
 #include "../include/GameManager.hpp"
 #include <iostream>
 #include "../include/ConfigReader.hpp"
+// burada portallar init edilir. init edilen portallar shared pointer ile mape verilir.
+// portal init edilirken portal için config okunur.
 
 GameManager::GameManager() : boardSize(8), currentPlayer("white"), gameOver(false) {
     configReader = std::make_shared<ConfigReader>();

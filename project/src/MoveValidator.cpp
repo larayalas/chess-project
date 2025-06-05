@@ -239,7 +239,17 @@ void MoveValidator::updateEdgeMoveCache(const Position &from, const Position &to
         // Düşman taşını tehdit etme
         edgeSquareCache[toStr].push_back(edgeSquare);
     }
-    
+    if(edge_node->type == EdgeType::is_portal) {
+        EdgeSquare edgeSquare;
+        edgeSquare.color = piece->getColor();
+        edgeSquare.pieceType = piece->getType();
+        edgeSquare.from = fromStr;
+        edgeSquare.type = EdgeType::is_portal;
+        edgeSquare.result = MoveResult::Portal;
+        std::cout << "edgeSquareCache'e portal hareketi eklendi " << toStr << "  "  << fromStr   << " " << int(edgeSquare.result) << " " << edgeSquare.pieceType << " " << edgeSquare.color << std::endl;        
+        // Düşman taşını tehdit etme
+        edgeSquareCache[toStr].push_back(edgeSquare);
+    }
     if(first_block) return; 
 
     // Taşın hareket tipleri için rekürsif çağrıları yeniden düzenleyelim
@@ -265,6 +275,8 @@ void MoveValidator::updateEdgeMoveCache(const Position &from, const Position &to
   //     std::cout << "isDepthBranchActive(moveDepth, \"forward\"): " << isDepthBranchActive(moveDepth, "forward") << std::endl;
   //     std::cout << "edge_node->type == EdgeType::is_free || edge_node->type == EdgeType::is_enemy: " << (edge_node->type == EdgeType::is_free || edge_node->type == EdgeType::is_enemy) << std::endl;
     }
+
+    // portalsa
     // İleri hareket - sadece forward derinliği 0 ise ve diğer derinlikler 0 değilse
     if (mov.forward > moveDepth.forward && isDepthBranchActive(moveDepth, "forward") && (edge_node->type == EdgeType::is_free || edge_node->type == EdgeType::is_enemy || edge_node->type == EdgeType::is_me)) {
         Position newPos = {from.x , from.y + moveDepth.forward + 1};
