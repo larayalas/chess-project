@@ -86,7 +86,8 @@ public:
     bool isCheckmate(const std::string &color);
 
     bool setBoard(std::shared_ptr<ChessBoard> chessBoard);
-    
+
+    bool castlling_valid(std::string color, Position position);
     // GameManager sınıfının erişimine izin ver
     friend class GameManager;
 };

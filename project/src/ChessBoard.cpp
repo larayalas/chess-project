@@ -252,3 +252,36 @@ bool ChessBoard::isCheckmate(const std::string& color) {
     
     return moveValidator->isCheckmate(color);
 }
+
+
+bool ChessBoard::isRuningPiece(const Position& pos) {
+    for (const auto& move : move_history) {
+        if(move.from == pos) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool ChessBoard::undoMove() {
+    if(move_history.empty()) {
+        return false;
+    }
+    MoveRecord moveRecord = move_history.back();
+    move_history.pop_back();
+    auto piece = getPieceAt(moveRecord.to);
+    if(piece) {
+        piece->setPosition(moveRecord.from);
+    }
+    return true;
+}
+
+std::vector<std::shared_ptr<chessPieces>> ChessBoard::getPiecesByName(const std::string& name) {
+    std::vector<std::shared_ptr<chessPieces>> pieces;
+    for(const auto& piece : allPieces) {
+        if(piece->getType() == name) {
+            pieces.push_back(piece);
+        }
+    }
+    return pieces;
+}

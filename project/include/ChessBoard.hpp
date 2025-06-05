@@ -16,6 +16,13 @@
 class MoveValidator;
 enum class MoveResult;
 
+struct MoveRecord {
+    Position from;
+    Position to;
+    std::string color;
+    std::string type_piece;
+};
+
 // Graf düğümü olarak satranç tahtasındaki kare
 struct ChessNode {
     Position pos;
@@ -40,6 +47,8 @@ private:
     // Portal
     std::unordered_map<std::string, Portal> portals;
     
+    std::vector<MoveRecord> move_history;
+
     // Hareket doğrulayıcı
     std::shared_ptr<MoveValidator> moveValidator;
 
@@ -51,6 +60,8 @@ private:
     // DFS/BFS hesaplamaları için path cache
     std::unordered_map<std::string, bool> pathFindingCache;
     
+    // belirli bir isimdeki taşları return etme
+    std::vector<std::shared_ptr<chessPieces>> getPiecesByName(const std::string& name);
     // Cache'i temizleme (tahtada değişiklik olduğunda)
     void clearCache();
     
@@ -99,6 +110,11 @@ public:
     // Tahtanın güncel durumunu string olarak gösterme
     std::string toString() const;
     
+
+    bool isRuningPiece(const Position& pos);
+
+    bool undoMove();
+
     // GameManager sınıfının erişimine izin ver
     friend class GameManager;
 };

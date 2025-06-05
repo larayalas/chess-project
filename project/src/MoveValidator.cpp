@@ -124,6 +124,7 @@ std::vector<Edge> MoveValidator::calculateEdge(const Position &from ) {
 
         }
     }
+    // tok için edge'leri hesapla
     return edges;
 }
 
@@ -535,4 +536,47 @@ bool MoveValidator::setBoard(std::shared_ptr<ChessBoard> chessBoard) {
     return true;
 }
 
+bool MoveValidator::castlling_valid(std::string color,  Position position) {
+    // şimdi ilk olarak kral konumunu al
+    Position kingPosition = board->getKingPosition(color);
+    // kralın gidebileceği yerleri al
+    if(this->board->isRuningPiece(kingPosition)) {
+        return false;
+    }
+    if(this->board->isRuningPiece(position)) {
+        return false;
+    }
 
+    // position ile kingPosition arasında bir taş var mı bak
+    // min ve max değerleri al
+    int minX = std::min(position.x, kingPosition.x);
+    int maxX = std::max(position.x, kingPosition.x);
+    int minY = std::min(position.y, kingPosition.y);
+    int maxY = std::max(position.y, kingPosition.y);
+    
+    // bu arada kalan taşları taramak gerekiyor
+    for(int x = minX; x <= maxX; x++) {
+        for(int y = minY; y <= maxY; y++) {
+            if(x == position.x && y == position.y) {
+                continue;
+            }
+            if(x == kingPosition.x && y == kingPosition.y) {
+                continue;
+            }
+            if(board->getPieceAt({x, y})) {
+                return false;
+            }
+            // kralın solundaki kareyi edgeSqureCache'ten al
+            auto edgeSquares = edgeSquareCache[std::to_string(x) + "," + std::to_string(y)];
+
+            // şimdi bakalım  kareleri gören düşman taş var mı
+            for(auto edgeSquare : edgeSquares) {
+                if(edgeSquare.color != color && edgeSquare.result == MoveResult::ValidMove) {
+                    return false;
+                }
+            }
+        }
+    }
+
+    return true;
+}
