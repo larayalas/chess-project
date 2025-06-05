@@ -124,6 +124,32 @@ std::vector<Edge> MoveValidator::calculateEdge(const Position &from ) {
 
         }
     }
+    // piece al mapten 
+    if(piece->getType() == "Rook") {
+        // şimdi rengine göre bakalım castling için
+        if(this->castlling_valid(color, from)) {
+            std::shared_ptr<chessPieces> king = this->board->getPieceAt(this->board->getKingPosition(color));
+            if(from.x < king->getPosition().x) {
+                // sol castling
+                for(auto &edge : edges) {
+                    if(edge.from == from.toString() && edge.to == Position{3,from.y}.toString()) {
+                        std::cout << "Rook sol castling" << " " << from.toString() << " " << Position{3,from.y}.toString() << std::endl;
+
+                        edge.result = MoveResult::Castling;
+                    }
+                }
+            } else {
+                // sağ castling
+                // doğru edge i değiştir
+                for(auto &edge : edges) {
+                    if(edge.from == from.toString() && edge.to == Position{5,from.y}.toString()) {
+                        std::cout << "Rook sağ castling" << " " << from.toString() << " " << Position{5,from.y}.toString() << std::endl;
+                        edge.result = MoveResult::Castling;
+                    }
+                }
+            }
+        }
+    }
     // tok için edge'leri hesapla
     return edges;
 }
@@ -199,17 +225,23 @@ void MoveValidator::updateEdgeMoveCache(const Position &from, const Position &to
         std::cout << "Edge bulunmadı " << fromStr << " -> " << toStr << std::endl;
         return;
     }
-    
+    if(first_block) return; 
+
     // edgeSquareCache'e eklenecek kayıt için temel bilgiler
     if(edge_node->type == EdgeType::is_free) {
-        
-        // EdgeSquare oluştur - bu kareye hangi taşın gelebileceğini gösterir
         EdgeSquare edgeSquare;
         edgeSquare.color = piece->getColor();
         edgeSquare.pieceType = piece->getType();
         edgeSquare.from = fromStr;
         edgeSquare.type = EdgeType::is_free;
-        edgeSquare.result = MoveResult::ValidMove;
+
+        if(edge_node->result == MoveResult::Castling) {
+            edgeSquare.result = MoveResult::Castling;
+        }
+        else
+            edgeSquare.result = MoveResult::ValidMove;
+
+        // EdgeSquare oluştur - bu kareye hangi taşın gelebileceğini gösterir
         
         std::cout << "edgeSquareCache'e eklendi " << toStr << "  "  << fromStr   << " " << int(edgeSquare.result) << " " << edgeSquare.pieceType << " " << edgeSquare.color << std::endl;
         
@@ -251,7 +283,7 @@ void MoveValidator::updateEdgeMoveCache(const Position &from, const Position &to
         // Düşman taşını tehdit etme
         edgeSquareCache[toStr].push_back(edgeSquare);
     }
-    if(first_block) return; 
+
 
     // Taşın hareket tipleri için rekürsif çağrıları yeniden düzenleyelim
     // ve sonsuz döngüye girmemek için kontrol ekleyelim
@@ -264,8 +296,9 @@ void MoveValidator::updateEdgeMoveCache(const Position &from, const Position &to
        std::cout << "mov.forward > moveDepth.forward: " << (mov.forward > moveDepth.forward) << std::endl;
        std::cout << "isDepthBranchActive(moveDepth, \"forward\"): " << isDepthBranchActive(moveDepth, "forward") << std::endl;
        std::cout << "edge_node->type == EdgeType::is_free || edge_node->type == EdgeType::is_enemy: " << int(edge_node->type)  << " " << int(edge_node->type == EdgeType::is_free) << " " << int(edge_node->type == EdgeType::is_enemy) << std::endl;
-
+       std::cout << "first_block: " << first_block << std::endl;
     }
+
     if(piece->getType() == "Pawn") {
   //      std::cout << "Pawn hareketi: " << from.toString() << " " << to.toString() << std::endl;
   //      std::cout << "moveDepth: " << moveDepth.forward << " " << moveDepth.sideways << " " << moveDepth.diagonal << " " << moveDepth.l_shape << " " << moveDepth.first_move << std::endl;
@@ -557,6 +590,7 @@ bool MoveValidator::castlling_valid(std::string color,  Position position) {
     // bu arada kalan taşları taramak gerekiyor
     for(int x = minX; x <= maxX; x++) {
         for(int y = minY; y <= maxY; y++) {
+            std::cout << "x: " << x << " y: " << y << std::endl;
             if(x == position.x && y == position.y) {
                 continue;
             }

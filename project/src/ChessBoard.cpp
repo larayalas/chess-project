@@ -175,7 +175,41 @@ MoveResult ChessBoard::movePiece(const Position& from, const Position& to) {
     }
     
     MoveResult result = moveValidator->isValidMove(from, to);
-    
+    std::cout << "result: " << int(result) << std::endl;
+    if(result == MoveResult::Castling) {
+        // kaleti direk istenilen konuam göttür
+        auto piece = getPieceAt(from);
+        if (!piece) {
+            return MoveResult::NoPieceAtSource;
+        }
+        // taşı yeni konuma taşı
+        board.erase(positionToKey(from));
+        board[positionToKey(to)] = piece;
+        piece->setPosition(to);
+
+        // soldan sağa castling
+        auto kingPosition = this->getKingPosition(piece->getColor());
+        if(from.x < to.x) {
+            auto king = getPieceAt(kingPosition);
+            if (!king) {
+                return MoveResult::NoPieceAtSource;
+            }
+            board.erase(positionToKey(kingPosition));
+            board[positionToKey(Position{2,to.y})] = king;
+            king->setPosition(Position{2,to.y});
+        }
+        else {
+            auto kingPosition = this->getKingPosition(piece->getColor());
+            auto king = getPieceAt(kingPosition);
+            if (!king) {
+                return MoveResult::NoPieceAtSource;
+            }
+            board.erase(positionToKey(kingPosition));
+            board[positionToKey(Position{6,to.y})] = king;
+            king->setPosition(Position{6,to.y});
+        }
+        return result;
+    }
     if (result == MoveResult::ValidMove || result == MoveResult::EnemyPieceCapturable) {
         // Hedef konumdaki taşı kaldır (eğer varsa)
         std::string toKey = positionToKey(to);

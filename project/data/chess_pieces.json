@@ -25,7 +25,7 @@
     {
       "type": "Queen",
       "positions": {
-        "white": [{ "x": 3, "y": 0 }],
+        "white": [{ "x": 3, "y": 3 }],
         "black": [{ "x": 3, "y": 7 }]
       },
       "movement": {
@@ -40,7 +40,7 @@
       "type": "Bishop",
       "positions": {
         "white": [
-          { "x": 2, "y": 0 },
+          { "x": 2, "y": 3 },
           { "x": 5, "y": 0 }
         ],
         "black": [
@@ -58,7 +58,7 @@
       "type": "Knight",
       "positions": {
         "white": [
-          { "x": 1, "y": 0 },
+          { "x": 1, "y": 3 },
           { "x": 6, "y": 0 }
         ],
         "black": [
@@ -78,7 +78,7 @@
       "type": "Rook",
       "positions": {
         "white": [
-          { "x": 0, "y": 4 },
+          { "x": 0, "y": 0 },
           { "x": 7, "y": 0 }
         ],
         "black": [

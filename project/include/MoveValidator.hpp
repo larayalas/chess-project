@@ -33,7 +33,8 @@ enum class MoveResult
     EnemyPieceCapturable,
     InvalidMovePattern,
     NoPieceAtSource,
-    Portal
+    Portal,
+    Castling
 };
 enum class EdgeType
 {

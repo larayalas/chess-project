@@ -297,15 +297,13 @@ int main(int argc, char* argv[]) {
         std::cout << "Sıra " << currentPlayer << " oyuncusunda." << std::endl;
         
         // Kullanıcıdan hareket al
-        int fromX, fromY, toX, toY;
-        std::cout << "Hareket ettirilecek taşın X koordinatı: ";
-        std::cin >> fromX;
-        std::cout << "Hareket ettirilecek taşın Y koordinatı: ";
-        std::cin >> fromY;
-        std::cout << "Hedef X koordinatı: ";
-        std::cin >> toX;
-        std::cout << "Hedef Y koordinatı: ";
-        std::cin >> toY;
+        std::string movename, from_str, to_str;
+        std::cin >> movename >> from_str >> to_str;
+        // move x,y x1,y1
+        int fromX = std::stoi(from_str.substr(0,from_str.find(',')));
+        int fromY = std::stoi(from_str.substr(from_str.find(',')+1,from_str.length()));
+        int toX = std::stoi(to_str.substr(0,to_str.find(',')));
+        int toY = std::stoi(to_str.substr(to_str.find(',')+1,to_str.length()));
         
         // Hareketi yap
         Position from = {fromX, fromY};
@@ -335,6 +333,9 @@ int main(int argc, char* argv[]) {
                 continue;
             case MoveResult::Portal:
                 std::cout << "Portal üzerinden geçildi!" << std::endl;
+                break;
+            case MoveResult::Castling:
+                std::cout << "Castling yapıldı!" << std::endl;
                 break;
             default:
                 std::cout << "Bilinmeyen sonuç!" << std::endl;
