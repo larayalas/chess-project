@@ -234,12 +234,46 @@ MoveResult ChessBoard::movePiece(const Position& from, const Position& to) {
         board[toKey] = piece;
         piece->setPosition(to);
         
+        if(to.y == (piece->getColor() == "white" ? boardSize - 1 : 0) && piece->getSpecialAbilities().promotion) {
+            // kullancıya sor
+            std::string promotion;
+            // tüm taşlarıı dolaş unique taş tiplerini yazdır
+            std::set<std::string> uniqueTypes;
+            for(const auto& p : allPieces) {
+                uniqueTypes.insert(p->getType());
+            }
+            std::cout << "Promotion: Hangi tip taşa çevirmek istiyorsunuz? (";
+            for(const auto& type : uniqueTypes) {
+                std::cout << type << ", ";
+            }
+            std::cout << ")" << std::endl;
+            std::cin >> promotion;
+            // temp taş oluştur
+            chessPieces tempPiece = {promotion, piece->getColor(), piece->getPosition(), piece->getSpecialAbilities()}; 
+            // tüm taşşları tara ilk aranan tipi bul
+            for(const auto& p : allPieces) {
+                if(p->getType() == promotion) {
+                    tempPiece.setMovement(p->getMovement());
+                    tempPiece.setType(p->getType());
+                    tempPiece.setSpecialAbilities(p->getSpecialAbilities());
+
+                    break;
+                }
+            }
+            // elimizdeki taşın özelliklerini değiştir
+            piece->setType(tempPiece.getType());
+            piece->setSpecialAbilities(tempPiece.getSpecialAbilities());
+            piece->setMovement(tempPiece.getMovement());
+            result = MoveResult::Promotion;        
+        }
+
         // Cache'i temizle - tahta değişti
         clearCache();
         
         return result;
     }
     
+
     return result;
 }
 

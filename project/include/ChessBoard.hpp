@@ -51,7 +51,7 @@ private:
 
     // Hareket doğrulayıcı
     std::shared_ptr<MoveValidator> moveValidator;
-
+    // move 7,6 7,7
     // Cache yapıları
     // Hareket geçmişi için cache
     std::unordered_map<std::string, std::vector<Position>> moveHistoryCache;

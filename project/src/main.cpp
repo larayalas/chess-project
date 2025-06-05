@@ -337,6 +337,9 @@ int main(int argc, char* argv[]) {
             case MoveResult::Castling:
                 std::cout << "Castling yapıldı!" << std::endl;
                 break;
+            case MoveResult::Promotion:
+                std::cout << "Taş yükseltildi!" << std::endl;
+                break;
             default:
                 std::cout << "Bilinmeyen sonuç!" << std::endl;
                 continue;

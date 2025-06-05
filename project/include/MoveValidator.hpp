@@ -34,7 +34,8 @@ enum class MoveResult
     InvalidMovePattern,
     NoPieceAtSource,
     Portal,
-    Castling
+    Castling,
+    Promotion
 };
 enum class EdgeType
 {
