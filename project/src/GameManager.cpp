@@ -96,7 +96,7 @@ MoveResult GameManager::makeMove(const Position& from, const Position& to) {
     if (result == MoveResult::ValidMove || result == MoveResult::EnemyPieceCapturable) {
         // Şah mat kontrolü
         // yeniden hamleleri oluştur
-        board->moveValidator->updateMoveCache();
+        //board->moveValidator->updateMoveCache();
         std::string oppositeColor = (currentPlayer == "white") ? "black" : "white";
         if (isCheckmate(oppositeColor)) {
             std::cout << oppositeColor << " şah mat oldu! " << currentPlayer << " kazandı!" << std::endl;
