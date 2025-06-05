@@ -3,6 +3,18 @@
 #include <iostream>
 #include <array>
 
+// Bu MoveDepth yapısını kaldırıyorum çünkü header dosyasında tanımladık
+// Farklı hareket yönleri için ayrı derinlik değerlerini tutacak yapı
+//struct MoveDepth {
+//    int forward = 0;
+//    int sideways = 0;
+//    int diagonal = 0;
+//    int l_shape = 0;
+//    int first_move = 0;
+//    
+//    MoveDepth() : forward(0), sideways(0), diagonal(0), l_shape(0), first_move(0) {}
+//};
+
 static std::unordered_map<std::string, std::unordered_map<std::string, bool>> visitedPaths;
 
 MoveValidator::MoveValidator(std::shared_ptr<ChessBoard> chessBoard) {
@@ -116,8 +128,35 @@ std::vector<Edge> MoveValidator::calculateEdge(const Position &from ) {
 }
 
 void MoveValidator::updateEdgeMoveCache(const Position &from, const Position &to, int depth) {
+    // Eski fonksiyonu yeni MoveDepth yapısını kullanacak fonksiyona yönlendir
+    MoveDepth moveDepth;
+    moveDepth.forward = depth;
+    moveDepth.sideways = depth;
+    moveDepth.diagonal = depth;
+    moveDepth.l_shape = depth;
+    moveDepth.first_move = depth;
+    
+    updateEdgeMoveCache(from, to, moveDepth);
+}
+bool MoveValidator::isDepthBranchActive(const MoveDepth& d, const std::string& current) {
+
+    if (current == "forward" &&  d.sideways == 0 && d.diagonal == 0 && d.l_shape == 0 && d.first_move == 0)
+        return true;
+    if (current == "sideways" &&  d.forward == 0 && d.diagonal == 0 && d.l_shape == 0 && d.first_move == 0)
+        return true;
+    if (current == "diagonal" &&  d.forward == 0 && d.sideways == 0 && d.l_shape == 0 && d.first_move == 0)
+        return true;
+    if (current == "l_shape" &&  d.forward == 0 && d.sideways == 0 && d.diagonal == 0 && d.first_move == 0)
+        return true;
+    if (current == "first_move"  && d.forward == 0 && d.sideways == 0 && d.diagonal == 0 && d.l_shape == 0)
+        return true;
+
+    return false;
+}
+
+void MoveValidator::updateEdgeMoveCache(const Position &from, const Position &to, const MoveDepth &moveDepth) {
     // Maksimum derinlik kontrolü ekleyelim
-    if (depth > 1000) {
+    if (moveDepth.forward > 1000 || moveDepth.sideways > 1000 || moveDepth.diagonal > 1000) {
         std::cout << "Maksimum derinliğe ulaşıldı: " << from.toString() << " -> " << to.toString() << std::endl;
         return;
     }
@@ -130,8 +169,6 @@ void MoveValidator::updateEdgeMoveCache(const Position &from, const Position &to
 
     std::string fromStr = from.toString();
     std::string toStr = to.toString();
-    
-    // Ziyaret edilen pozisyonları takip edelim
     
     // Bu yol daha önce ziyaret edilmiş mi?
     if (visitedPaths[fromStr][toStr]) {
@@ -153,8 +190,6 @@ void MoveValidator::updateEdgeMoveCache(const Position &from, const Position &to
         std::cout << "moveCache'de " << fromStr << " bulunamadı" << std::endl;
         return;
     }
-    
-//    std::cout << "moveCache[" << fromStr << "].size(): " << moveCache[fromStr].size() << std::endl;
     
     // to pozisyonuna karşılık gelen edge'i bul
     Edge* edge_node = nullptr;
@@ -216,73 +251,112 @@ void MoveValidator::updateEdgeMoveCache(const Position &from, const Position &to
     // Taşın hareket tipleri için rekürsif çağrıları yeniden düzenleyelim
     // ve sonsuz döngüye girmemek için kontrol ekleyelim
     Movement mov = piece->getMovement();
-    
-    // Recursive çağrıları mevcut pozisyondan değil, hedef pozisyondan yapıyoruz
-    Position nextPos = to;
-    
-    // İleri hareket 
-    if (mov.forward > depth) {
-        Position newPos = {nextPos.x , nextPos.y + 1};
-        Position newPos2 = {nextPos.x , nextPos.y - 1};
-        if (board->isValidPosition(newPos) && !visitedPaths[toStr][newPos.toString()]) {
-            updateEdgeMoveCache(to, newPos, depth + 1);
-        }
-        if (board->isValidPosition(newPos2) && !visitedPaths[toStr][newPos2.toString()]) {
-            updateEdgeMoveCache(to, newPos2, depth + 1);
-        }
+    if(piece->getType() == "Rook") {
+//        std::cout << "Rook hareketi: " << from.toString() << " " << to.toString() << std::endl;
+//        std::cout << "moveDepth: " << moveDepth.forward << " " << moveDepth.sideways << " " << moveDepth.diagonal << " " << moveDepth.l_shape << " " << moveDepth.first_move << std::endl;
+//        std::cout << "edge_node->type: " << int(edge_node->type) << std::endl;
+//
+//       std::cout << "mov.forward > moveDepth.forward: " << (mov.forward > moveDepth.forward) << std::endl;
+//       std::cout << "isDepthBranchActive(moveDepth, \"forward\"): " << isDepthBranchActive(moveDepth, "forward") << std::endl;
+//       std::cout << "edge_node->type == EdgeType::is_free || edge_node->type == EdgeType::is_enemy: " << (edge_node->type == EdgeType::is_free || edge_node->type == EdgeType::is_enemy) << std::endl;
+
     }
-    // Yanlara hareket
-    if (mov.sideways > depth) {
-        Position newPosRight = {nextPos.x + 1, nextPos.y };
-        Position newPosLeft = {nextPos.x - 1, nextPos.y };
-        if (board->isValidPosition(newPosRight) && !visitedPaths[toStr][newPosRight.toString()]) {
-            updateEdgeMoveCache(to, newPosRight, depth + 1);
-        }
-        if (board->isValidPosition(newPosLeft) && !visitedPaths[toStr][newPosLeft.toString()]) {
-            updateEdgeMoveCache(to, newPosLeft, depth + 1);
-        }
+    if(piece->getType() == "Pawn") {
+  //      std::cout << "Pawn hareketi: " << from.toString() << " " << to.toString() << std::endl;
+  //      std::cout << "moveDepth: " << moveDepth.forward << " " << moveDepth.sideways << " " << moveDepth.diagonal << " " << moveDepth.l_shape << " " << moveDepth.first_move << std::endl;
+  //      std::cout << "edge_node->type: " << int(edge_node->type) << std::endl;
+  //      // mov.forward > moveDepth.forward && isDepthBranchActive(moveDepth, "forward") && (edge_node->type == EdgeType::is_free || edge_node->type == EdgeType::is_enemy)
+  //     // yazdır
+  //     std::cout << "mov.forward > moveDepth.forward: " << (mov.forward > moveDepth.forward) << std::endl;
+  //     std::cout << "isDepthBranchActive(moveDepth, \"forward\"): " << isDepthBranchActive(moveDepth, "forward") << std::endl;
+  //     std::cout << "edge_node->type == EdgeType::is_free || edge_node->type == EdgeType::is_enemy: " << (edge_node->type == EdgeType::is_free || edge_node->type == EdgeType::is_enemy) << std::endl;
     }
-    
-    // Çapraz hareket
-    if (mov.diagonal > depth) {
-        Position newPosDiag1 = {nextPos.x + 1, nextPos.y + 1};
-        Position newPosDiag2 = {nextPos.x + 1, nextPos.y - 1};
-        Position newPosDiag3 = {nextPos.x - 1, nextPos.y + 1};
-        Position newPosDiag4 = {nextPos.x - 1, nextPos.y - 1};
+    // İleri hareket - sadece forward derinliği 0 ise ve diğer derinlikler 0 değilse
+    if (mov.forward > moveDepth.forward && isDepthBranchActive(moveDepth, "forward") && (edge_node->type == EdgeType::is_free || edge_node->type == EdgeType::is_enemy || edge_node->type == EdgeType::is_me)) {
+        Position newPos = {from.x , from.y + moveDepth.forward + 1};
+        Position newPos2 = {from.x , from.y - moveDepth.forward - 1};
+        std::cout << "ileri hareket: " << from.toString() << " " << newPos.toString() << " " << newPos2.toString() << std::endl;
+        // Yeni derinlik değerlerini hesapla
+        MoveDepth newDepth = moveDepth;
+        newDepth.forward += 1;
         
-        if (board->isValidPosition(newPosDiag1) && !visitedPaths[toStr][newPosDiag1.toString()]) {
-            updateEdgeMoveCache(to, newPosDiag1, depth + 1);
+        if (board->isValidPosition(newPos) && !visitedPaths[fromStr][newPos.toString()]) {
+            updateEdgeMoveCache(from, newPos, newDepth);
         }
-        if (board->isValidPosition(newPosDiag2) && !visitedPaths[toStr][newPosDiag2.toString()]) {
-            updateEdgeMoveCache(to, newPosDiag2, depth + 1);
+        if (board->isValidPosition(newPos2) && !visitedPaths[fromStr][newPos2.toString()]) {
+            updateEdgeMoveCache(from, newPos2, newDepth);
         }
-        if (board->isValidPosition(newPosDiag3) && !visitedPaths[toStr][newPosDiag3.toString()]) {
-            updateEdgeMoveCache(to, newPosDiag3, depth + 1);
+    }
+    // Yanlara hareket - sadece sideways derinliği 0 ise ve diğer derinlikler 0 değilse
+    if (mov.sideways > moveDepth.sideways && isDepthBranchActive(moveDepth, "sideways") && (edge_node->type == EdgeType::is_free || edge_node->type == EdgeType::is_enemy || edge_node->type == EdgeType::is_me)) {
+        Position newPosRight = {from.x + moveDepth.sideways, from.y };
+        Position newPosLeft = {from.x - moveDepth.sideways, from.y };
+        
+        // Yeni derinlik değerlerini hesapla
+        MoveDepth newDepth = moveDepth;
+        newDepth.sideways += 1;
+        
+        if (board->isValidPosition(newPosRight) && !visitedPaths[fromStr][newPosRight.toString()]) {
+            // Yana hareket için derinliği artır
+            updateEdgeMoveCache(from, newPosRight, newDepth);
         }
-        if (board->isValidPosition(newPosDiag4) && !visitedPaths[toStr][newPosDiag4.toString()]) {
-            updateEdgeMoveCache(to, newPosDiag4, depth + 1);
+        if (board->isValidPosition(newPosLeft) && !visitedPaths[fromStr][newPosLeft.toString()]) {
+            updateEdgeMoveCache(from, newPosLeft, newDepth);
         }
     }
     
-    // L şekli hareket (at)
-    if (mov.l_shape && depth < 1) {
+    // Çapraz hareket - sadece diagonal derinliği 0 ise ve diğer derinlikler 0 değilse
+    if (mov.diagonal > moveDepth.diagonal && isDepthBranchActive(moveDepth, "diagonal") && (edge_node->type == EdgeType::is_free || edge_node->type == EdgeType::is_enemy || edge_node->type == EdgeType::is_me)) {
+        Position newPosDiag1 = {from.x + moveDepth.diagonal + 1, from.y + moveDepth.diagonal + 1};
+        Position newPosDiag2 = {from.x + moveDepth.diagonal + 1, from.y - moveDepth.diagonal - 1};
+        Position newPosDiag3 = {from.x - moveDepth.diagonal - 1, from.y + moveDepth.diagonal + 1};
+        Position newPosDiag4 = {from.x - moveDepth.diagonal - 1, from.y - moveDepth.diagonal - 1};
+        
+        // Yeni derinlik değerlerini hesapla
+        MoveDepth newDepth = moveDepth;
+        newDepth.diagonal += 1;
+        
+        if (board->isValidPosition(newPosDiag1) && !visitedPaths[fromStr][newPosDiag1.toString()]) {
+            // Çapraz hareket için derinliği artır
+            updateEdgeMoveCache(from, newPosDiag1, newDepth);
+        }
+        if (board->isValidPosition(newPosDiag2) && !visitedPaths[fromStr][newPosDiag2.toString()]) {
+            updateEdgeMoveCache(from, newPosDiag2, newDepth);
+        }
+        if (board->isValidPosition(newPosDiag3) && !visitedPaths[fromStr][newPosDiag3.toString()]) {
+            updateEdgeMoveCache(from, newPosDiag3, newDepth);
+        }
+        if (board->isValidPosition(newPosDiag4) && !visitedPaths[fromStr][newPosDiag4.toString()]) {
+            updateEdgeMoveCache(from, newPosDiag4, newDepth);
+        }
+    }
+    
+    // L şekli hareket (at) - sadece l_shape derinliği 0 ise ve diğer derinlikler 0 değilse
+    if (mov.l_shape && moveDepth.l_shape < 1 && isDepthBranchActive(moveDepth, "l_shape") && (edge_node->type == EdgeType::is_free || edge_node->type == EdgeType::is_enemy || edge_node->type == EdgeType::is_me)) {
         const std::array<std::pair<int, int>, 8> knightMoves = {{
             {2, 1}, {2, -1}, {-2, 1}, {-2, -1},
             {1, 2}, {1, -2}, {-1, 2}, {-1, -2}
         }};
         
+        // Yeni derinlik değerlerini hesapla
+        MoveDepth newDepth = moveDepth;
+        newDepth.l_shape += 1;
+        
         for (const auto& move : knightMoves) {
-            Position newPos = {nextPos.x + move.first, nextPos.y + move.second};
-            if (board->isValidPosition(newPos) && !visitedPaths[toStr][newPos.toString()]) {
-                updateEdgeMoveCache(to, newPos, depth + 1);
+            Position newPos = {from.x + move.first, from.y + move.second};
+            if (board->isValidPosition(newPos) && !visitedPaths[fromStr][newPos.toString()]) {
+                // At hareketi için derinliği artır
+                updateEdgeMoveCache(from, newPos, newDepth);
             }
         }
     }
 
-    if(mov.first_move_forward && (piece->getColor() == "white" ? nextPos.y == 1 : nextPos.y == 6)) {
-        Position newPos = {nextPos.x , nextPos.y + 2 * (piece->getColor() == "white" ? 1 : -1)};
-        if (board->isValidPosition(newPos) && !visitedPaths[toStr][newPos.toString()]) {
-            updateEdgeMoveCache(to, newPos, depth + 1);
+    if(mov.first_move_forward && (piece->getColor() == "white" ? from.y == 1 : from.y == 6)) {
+        Position newPos = {from.x , from.y + (piece->getColor() == "white" ? 2 : -2)};
+        MoveDepth newDepth = moveDepth;
+        newDepth.first_move += 1;
+        if (board->isValidPosition(newPos) && !visitedPaths[fromStr][newPos.toString()]) {
+            updateEdgeMoveCache(from, newPos, newDepth);
         }
     }
     
@@ -309,7 +383,11 @@ void MoveValidator::updateMoveCache() {
     // Edge'leri tahtaya işle
     for (const auto &piece : board->getAllPieces()) {
         if (piece) {
-            updateEdgeMoveCache(piece->getPosition(), piece->getPosition(), 0);
+            // MoveDepth nesnesi oluştur, tüm derinlikleri 0 olarak başlat
+            MoveDepth initialDepth;
+            
+            // Yeni parametre yapısıyla fonksiyonu çağır
+            updateEdgeMoveCache(piece->getPosition(), piece->getPosition(), initialDepth);
         }
     }
 

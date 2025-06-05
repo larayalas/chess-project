@@ -12,6 +12,17 @@ class ChessBoard;
 // Position sınıfını içeren başlık dosyasını dahil et
 #include "ConfigReader.hpp"
 
+// Farklı hareket yönleri için ayrı derinlik değerlerini tutacak yapı
+struct MoveDepth {
+    int forward = 0;
+    int sideways = 0;
+    int diagonal = 0;
+    int l_shape = 0;
+    int first_move = 0;
+    
+    MoveDepth() : forward(0), sideways(0), diagonal(0), l_shape(0), first_move(0) {}
+};
+
 // Hareket sonucu durumu
 enum class MoveResult
 {
@@ -64,11 +75,14 @@ public:
 
     // Bir hareketin geçerli olup olmadığını kontrol etme
     MoveResult isValidMove(const Position &from, const Position &to);
-
+    bool isDepthBranchActive(const MoveDepth& d, const std::string& current);
     void updateMoveCache();
     // Bir taşın gidebileceği tüm geçerli konumları hesaplama ve cache'e kaydetme
     std::vector<Edge> calculateEdge(const Position &from);
+    // Eski sürüm (geriye uyumluluk için)
     void updateEdgeMoveCache(const Position &from, const Position &to, int depth);
+    // Her yön için ayrı derinlik değeri tutan yeni sürüm
+    void updateEdgeMoveCache(const Position &from, const Position &to, const MoveDepth &moveDepth);
 
     // Şah mat kontrolü
     bool isCheckmate(const std::string &color);
