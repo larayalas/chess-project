@@ -235,7 +235,7 @@ void MoveValidator::updateEdgeMoveCache(const Position &from, const Position &to
         edgeSquare.from = fromStr;
         edgeSquare.type = EdgeType::is_enemy;
         edgeSquare.result = MoveResult::EnemyPieceCapturable;
-        
+        std::cout << "edgeSquareCache'e yeme hareketi eklendi " << toStr << "  "  << fromStr   << " " << int(edgeSquare.result) << " " << edgeSquare.pieceType << " " << edgeSquare.color << std::endl;        
         // Düşman taşını tehdit etme
         edgeSquareCache[toStr].push_back(edgeSquare);
     }
@@ -245,14 +245,14 @@ void MoveValidator::updateEdgeMoveCache(const Position &from, const Position &to
     // Taşın hareket tipleri için rekürsif çağrıları yeniden düzenleyelim
     // ve sonsuz döngüye girmemek için kontrol ekleyelim
     Movement mov = piece->getMovement();
-    if(piece->getType() == "Rook") {
-//        std::cout << "Rook hareketi: " << from.toString() << " " << to.toString() << std::endl;
-//        std::cout << "moveDepth: " << moveDepth.forward << " " << moveDepth.sideways << " " << moveDepth.diagonal << " " << moveDepth.l_shape << " " << moveDepth.first_move << std::endl;
-//        std::cout << "edge_node->type: " << int(edge_node->type) << std::endl;
-//
-//       std::cout << "mov.forward > moveDepth.forward: " << (mov.forward > moveDepth.forward) << std::endl;
-//       std::cout << "isDepthBranchActive(moveDepth, \"forward\"): " << isDepthBranchActive(moveDepth, "forward") << std::endl;
-//       std::cout << "edge_node->type == EdgeType::is_free || edge_node->type == EdgeType::is_enemy: " << (edge_node->type == EdgeType::is_free || edge_node->type == EdgeType::is_enemy) << std::endl;
+    if(piece->getType() == "Rook" && edge_node->type == EdgeType::is_enemy) {
+        std::cout << "Rook hareketi: " << from.toString() << " " << to.toString() << std::endl;
+        std::cout << "moveDepth: " << moveDepth.forward << " " << moveDepth.sideways << " " << moveDepth.diagonal << " " << moveDepth.l_shape << " " << moveDepth.first_move << std::endl;
+        std::cout << "edge_node->type: " << int(edge_node->type) << std::endl;
+
+       std::cout << "mov.forward > moveDepth.forward: " << (mov.forward > moveDepth.forward) << std::endl;
+       std::cout << "isDepthBranchActive(moveDepth, \"forward\"): " << isDepthBranchActive(moveDepth, "forward") << std::endl;
+       std::cout << "edge_node->type == EdgeType::is_free || edge_node->type == EdgeType::is_enemy: " << int(edge_node->type)  << " " << int(edge_node->type == EdgeType::is_free) << " " << int(edge_node->type == EdgeType::is_enemy) << std::endl;
 
     }
     if(piece->getType() == "Pawn") {

@@ -78,7 +78,7 @@
       "type": "Rook",
       "positions": {
         "white": [
-          { "x": 0, "y": 0 },
+          { "x": 0, "y": 4 },
           { "x": 7, "y": 0 }
         ],
         "black": [
