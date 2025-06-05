@@ -80,9 +80,7 @@ public:
     // Bir taşın gidebileceği tüm geçerli konumları hesaplama ve cache'e kaydetme
     std::vector<Edge> calculateEdge(const Position &from);
     // Eski sürüm (geriye uyumluluk için)
-    void updateEdgeMoveCache(const Position &from, const Position &to, int depth);
-    // Her yön için ayrı derinlik değeri tutan yeni sürüm
-    void updateEdgeMoveCache(const Position &from, const Position &to, const MoveDepth &moveDepth);
+    void updateEdgeMoveCache(const Position &from, const Position &to, const MoveDepth &moveDepth, bool first_block);
 
     // Şah mat kontrolü
     bool isCheckmate(const std::string &color);

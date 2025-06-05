@@ -127,17 +127,6 @@ std::vector<Edge> MoveValidator::calculateEdge(const Position &from ) {
     return edges;
 }
 
-void MoveValidator::updateEdgeMoveCache(const Position &from, const Position &to, int depth) {
-    // Eski fonksiyonu yeni MoveDepth yapısını kullanacak fonksiyona yönlendir
-    MoveDepth moveDepth;
-    moveDepth.forward = depth;
-    moveDepth.sideways = depth;
-    moveDepth.diagonal = depth;
-    moveDepth.l_shape = depth;
-    moveDepth.first_move = depth;
-    
-    updateEdgeMoveCache(from, to, moveDepth);
-}
 bool MoveValidator::isDepthBranchActive(const MoveDepth& d, const std::string& current) {
 
     if (current == "forward" &&  d.sideways == 0 && d.diagonal == 0 && d.l_shape == 0 && d.first_move == 0)
@@ -154,7 +143,7 @@ bool MoveValidator::isDepthBranchActive(const MoveDepth& d, const std::string& c
     return false;
 }
 
-void MoveValidator::updateEdgeMoveCache(const Position &from, const Position &to, const MoveDepth &moveDepth) {
+void MoveValidator::updateEdgeMoveCache(const Position &from, const Position &to, const MoveDepth &moveDepth, bool first_block) {
     // harita dışı ise direk return
     if(to.x < 0 || to.x >= board->getBoardSize() || to.y < 0 || to.y >= board->getBoardSize()) return;
     // Maksimum derinlik kontrolü ekleyelim
@@ -251,6 +240,8 @@ void MoveValidator::updateEdgeMoveCache(const Position &from, const Position &to
         edgeSquareCache[toStr].push_back(edgeSquare);
     }
     
+    if(first_block) return; 
+
     // Taşın hareket tipleri için rekürsif çağrıları yeniden düzenleyelim
     // ve sonsuz döngüye girmemek için kontrol ekleyelim
     Movement mov = piece->getMovement();
@@ -281,28 +272,39 @@ void MoveValidator::updateEdgeMoveCache(const Position &from, const Position &to
         // Yeni derinlik değerlerini hesapla
         MoveDepth newDepth = moveDepth;
         newDepth.forward += 1;
-        
         if (board->isValidPosition(newPos) && !visitedPaths[fromStr][newPos.toString()]) {
-            updateEdgeMoveCache(from, newPos, newDepth);
+            if(edge_node->type == EdgeType::is_enemy) {
+                first_block = true;
+            }
+            updateEdgeMoveCache(from, newPos, newDepth, first_block);
         }
         if (board->isValidPosition(newPos2) && !visitedPaths[fromStr][newPos2.toString()]) {
-            updateEdgeMoveCache(from, newPos2, newDepth);
+            if(edge_node->type == EdgeType::is_enemy) {
+                first_block = true;
+            }
+            updateEdgeMoveCache(from, newPos2, newDepth, first_block);
         }
     }
     // Yanlara hareket - sadece sideways derinliği 0 ise ve diğer derinlikler 0 değilse
     if (mov.sideways > moveDepth.sideways && isDepthBranchActive(moveDepth, "sideways") && (edge_node->type == EdgeType::is_free || edge_node->type == EdgeType::is_enemy || edge_node->type == EdgeType::is_me)) {
-        Position newPosRight = {from.x + moveDepth.sideways, from.y };
-        Position newPosLeft = {from.x - moveDepth.sideways, from.y };
+        Position newPosRight = {from.x + moveDepth.sideways + 1, from.y };
+        Position newPosLeft = {from.x - moveDepth.sideways - 1, from.y };
         
         // Yeni derinlik değerlerini hesapla
         MoveDepth newDepth = moveDepth;
         newDepth.sideways += 1;
-        
+
         if (board->isValidPosition(newPosRight) && !visitedPaths[fromStr][newPosRight.toString()]) {
-            updateEdgeMoveCache(from, newPosRight, newDepth);
+        if(edge_node->type == EdgeType::is_enemy) {
+            first_block = true;
+        }
+            updateEdgeMoveCache(from, newPosRight, newDepth, first_block);
         }
         if (board->isValidPosition(newPosLeft) && !visitedPaths[fromStr][newPosLeft.toString()]) {
-            updateEdgeMoveCache(from, newPosLeft, newDepth);
+            if(edge_node->type == EdgeType::is_enemy) {
+                first_block = true;
+            }
+            updateEdgeMoveCache(from, newPosLeft, newDepth, first_block);
         }
     }
     
@@ -318,17 +320,29 @@ void MoveValidator::updateEdgeMoveCache(const Position &from, const Position &to
         newDepth.diagonal += 1;
         
         if (board->isValidPosition(newPosDiag1) && !visitedPaths[fromStr][newPosDiag1.toString()]) {
+            if(edge_node->type == EdgeType::is_enemy) {
+                first_block = true;
+            }
             // Çapraz hareket için derinliği artır
-            updateEdgeMoveCache(from, newPosDiag1, newDepth);
+            updateEdgeMoveCache(from, newPosDiag1, newDepth, first_block);
         }
         if (board->isValidPosition(newPosDiag2) && !visitedPaths[fromStr][newPosDiag2.toString()]) {
-            updateEdgeMoveCache(from, newPosDiag2, newDepth);
+            if(edge_node->type == EdgeType::is_enemy) {
+                first_block = true;
+            }
+            updateEdgeMoveCache(from, newPosDiag2, newDepth, first_block);
         }
         if (board->isValidPosition(newPosDiag3) && !visitedPaths[fromStr][newPosDiag3.toString()]) {
-            updateEdgeMoveCache(from, newPosDiag3, newDepth);
+            if(edge_node->type == EdgeType::is_enemy) {
+                first_block = true;
+            }
+            updateEdgeMoveCache(from, newPosDiag3, newDepth, first_block);
         }
         if (board->isValidPosition(newPosDiag4) && !visitedPaths[fromStr][newPosDiag4.toString()]) {
-            updateEdgeMoveCache(from, newPosDiag4, newDepth);
+            if(edge_node->type == EdgeType::is_enemy) {
+                first_block = true;
+            }
+            updateEdgeMoveCache(from, newPosDiag4, newDepth, first_block);
         }
     }
     
@@ -346,8 +360,11 @@ void MoveValidator::updateEdgeMoveCache(const Position &from, const Position &to
         for (const auto& move : knightMoves) {
             Position newPos = {from.x + move.first, from.y + move.second};
             if (board->isValidPosition(newPos) && !visitedPaths[fromStr][newPos.toString()]) {
+                if(edge_node->type == EdgeType::is_enemy) {
+                    first_block = true;
+                }
                 // At hareketi için derinliği artır
-                updateEdgeMoveCache(from, newPos, newDepth);
+                updateEdgeMoveCache(from, newPos, newDepth, first_block);
             }
         }
     }
@@ -357,7 +374,10 @@ void MoveValidator::updateEdgeMoveCache(const Position &from, const Position &to
         MoveDepth newDepth = moveDepth;
         newDepth.first_move += 1;
         if (board->isValidPosition(newPos) && !visitedPaths[fromStr][newPos.toString()]) {
-            updateEdgeMoveCache(from, newPos, newDepth);
+            if(edge_node->type == EdgeType::is_enemy) {
+                first_block = true;
+            }
+            updateEdgeMoveCache(from, newPos, newDepth, first_block);
         }
     }
     
@@ -388,7 +408,7 @@ void MoveValidator::updateMoveCache() {
             MoveDepth initialDepth;
             
             // Yeni parametre yapısıyla fonksiyonu çağır
-            updateEdgeMoveCache(piece->getPosition(), piece->getPosition(), initialDepth);
+            updateEdgeMoveCache(piece->getPosition(), piece->getPosition(), initialDepth, false);
         }
     }
 
