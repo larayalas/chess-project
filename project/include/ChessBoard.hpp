@@ -11,9 +11,12 @@
 #include "chessPieces.hpp"
 #include "ConfigReader.hpp"
 #include "Portal.hpp"
+#include "PortalManager.hpp"
 
-// Forward declaration
+// Forward declarations
 class MoveValidator;
+class Portal;
+
 enum class MoveResult;
 
 struct MoveRecord {
@@ -47,7 +50,7 @@ private:
     // Tüm taşların listesi
     std::vector<std::shared_ptr<chessPieces>> allPieces;
     // Portal
-    std::unordered_map<std::string, Portal> portals;
+    std::unordered_map<std::string, std::shared_ptr<Portal>> portals;
     
     std::vector<MoveRecord> move_history;
 
@@ -102,7 +105,7 @@ public:
     std::vector<Position> getNeighbors(const Position& pos);
     
     // Portal
-    std::unordered_map<std::string, Portal> getPortals() const;
+    std::unordered_map<std::string, std::shared_ptr<Portal>> getPortals() const;
     
     // Taş hareket ettirme
     MoveResult movePiece(const Position& from, const Position& to, int turn);
@@ -119,7 +122,7 @@ public:
     bool isRuningPiece(const Position& pos);
 
     bool undoMove();
-
+    void setPortals(std::vector<std::shared_ptr<Portal>> portals);
     // GameManager sınıfının erişimine izin ver
     friend class GameManager;
 };

@@ -5,6 +5,9 @@
 #include "MoveValidator.hpp"
 #include "chessPieces.hpp"
 #include "ConfigReader.hpp"
+#include "Portal.hpp"
+#include "PortalManager.hpp"
+class PortalManager;
 
 class GameManager {
 private:
@@ -15,7 +18,7 @@ private:
     std::string currentPlayer;
     bool gameOver;
     int turn;
-
+    std::shared_ptr<PortalManager> portalManager;
 public:
     // Constructor
     GameManager();

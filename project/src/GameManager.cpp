@@ -7,6 +7,7 @@
 GameManager::GameManager() : boardSize(8), currentPlayer("white"), gameOver(false) {
     configReader = std::make_shared<ConfigReader>();
     turn = 0;
+    portalManager = std::make_shared<PortalManager>();
 }
 
 bool GameManager::initialize(const std::string& configFilePath) {
@@ -28,7 +29,7 @@ bool GameManager::initialize(const std::string& configFilePath) {
     
     // Taşları oluştur
     std::vector<std::shared_ptr<chessPieces>> pieces;
-    
+    portalManager->init(config.portals);
     // Standart taşları ekle
     for (const auto& pieceConfig : config.pieces) {
         for (const auto& colorPositions : pieceConfig.positions) {
@@ -108,6 +109,15 @@ MoveResult GameManager::makeMove(const Position& from, const Position& to) {
         
         // Oyuncuyu değiştir
         switchPlayer();
+        portalManager->update(turn);
+        auto activePortals = portalManager->getActivePortals();
+        std::cout << "Active Portals: " << activePortals.size() << std::endl;
+        if(activePortals.size() > 0) {
+            board->setPortals(activePortals);
+            for(const auto& portal : activePortals) {
+                std::cout << "Portal: " << portal->getEntryPosition().toString() << " -> " << portal->getExitPosition().toString() << std::endl;
+            }
+        }
         turn++;
     }
     

@@ -123,17 +123,11 @@ std::vector<Edge> MoveValidator::calculateEdge(const Position &from ) {
             {
                 bool en_passant = false;
                 if(piece->getSpecialAbilities().en_passant && targetPiece->getSpecialAbilities().en_passant){
-                    std::cout << "en_passant 1.if" << std::endl;
                     if( piece->getPosition().x -  to.x == (color == "white" ? -1 : 1) && piece->getPosition().y == to.y){
-                        std::cout << "en_passant 2.if" << std::endl;
                         auto move_history = this->board->getMoveHistoryPosition(to);
-                        std::cout << "move_history: " << move_history.size() << std::endl;
                         for(auto move : move_history){
-                            std::cout << "en_passant 3.for" << std::endl;
                             if(move.result == MoveResult::ValidMove){
-                                std::cout << "en_passant 4.if" << std::endl;
                                 if(this->board->turn == move.turn ){
-                                    std::cout << "en_passant 5.if" << std::endl;
                                     en_passant = true;
                                 }
                             }
@@ -141,7 +135,6 @@ std::vector<Edge> MoveValidator::calculateEdge(const Position &from ) {
                     }
                 }
                 if(en_passant){
-                    std::cout << "en_passant" << std::endl;
                     edges.push_back({from.toString(), to.toString(), EdgeType::en_passant, MoveResult::EnPassant});
                     // edgeSquare ekle
                     EdgeSquare edgeSquare;

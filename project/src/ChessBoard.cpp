@@ -163,7 +163,7 @@ std::string ChessBoard::toString() const {
     return ss.str();
 }
 
-std::unordered_map<std::string, Portal> ChessBoard::getPortals() const {
+std::unordered_map<std::string, std::shared_ptr<Portal>> ChessBoard::getPortals() const {
     return portals;
 }
 
@@ -361,4 +361,12 @@ std::vector<MoveRecord> ChessBoard::getMoveHistoryPosition(Position pos) {
         }
     }
     return moves;
+}
+
+void ChessBoard::setPortals(std::vector<std::shared_ptr<Portal>> portals) {
+    this->portals.clear();
+    for(const auto& portal : portals) {
+        std::cout << "Portal: " << portal->getEntryPosition().toString() << " -> " << portal->getExitPosition().toString() << std::endl;
+        this->portals.insert(std::make_pair(portal->getEntryPosition().toString(), portal));
+    }
 }
