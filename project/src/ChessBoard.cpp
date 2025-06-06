@@ -264,7 +264,17 @@ MoveResult ChessBoard::movePiece(const Position& from, const Position& to, int t
 
                 finalResult = MoveResult::Promotion;
             }
-
+            // aktif protallardan birinde bitti ise hamle exitine gider
+            for(const auto& portal : portals) {
+                auto portal_entry = portal.second->getEntryPosition();
+                if(portal_entry == to) {
+                    finalResult = MoveResult::Portal;
+                    auto portal_exit = portal.second->getExitPosition();
+                    board.erase(positionToKey(to));
+                    board[positionToKey(portal_exit)] = piece;
+                    piece->setPosition(portal_exit);
+                }
+            }
             move_history.push_back({from, to, piece->getColor(), piece->getType(), finalResult, turn});
 
             clearCache();
@@ -366,7 +376,6 @@ std::vector<MoveRecord> ChessBoard::getMoveHistoryPosition(Position pos) {
 void ChessBoard::setPortals(std::vector<std::shared_ptr<Portal>> portals) {
     this->portals.clear();
     for(const auto& portal : portals) {
-        std::cout << "Portal: " << portal->getEntryPosition().toString() << " -> " << portal->getExitPosition().toString() << std::endl;
         this->portals.insert(std::make_pair(portal->getEntryPosition().toString(), portal));
     }
 }
