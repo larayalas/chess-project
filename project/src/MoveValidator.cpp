@@ -120,10 +120,47 @@ std::vector<Edge> MoveValidator::calculateEdge(const Position &from ) {
             if (targetColor == color)
                 edges.push_back({from.toString(), to.toString(), EdgeType::is_friend, MoveResult::Free});
             else
-                edges.push_back({from.toString(), to.toString(), EdgeType::is_enemy, MoveResult::Free});
-
+            {
+                bool en_passant = false;
+                if(piece->getSpecialAbilities().en_passant && targetPiece->getSpecialAbilities().en_passant){
+                    std::cout << "en_passant 1.if" << std::endl;
+                    if( piece->getPosition().x -  to.x == (color == "white" ? -1 : 1) && piece->getPosition().y == to.y){
+                        std::cout << "en_passant 2.if" << std::endl;
+                        auto move_history = this->board->getMoveHistoryPosition(to);
+                        std::cout << "move_history: " << move_history.size() << std::endl;
+                        for(auto move : move_history){
+                            std::cout << "en_passant 3.for" << std::endl;
+                            if(move.result == MoveResult::ValidMove){
+                                std::cout << "en_passant 4.if" << std::endl;
+                                if(this->board->turn == move.turn ){
+                                    std::cout << "en_passant 5.if" << std::endl;
+                                    en_passant = true;
+                                }
+                            }
+                        }
+                    }
+                }
+                if(en_passant){
+                    std::cout << "en_passant" << std::endl;
+                    edges.push_back({from.toString(), to.toString(), EdgeType::en_passant, MoveResult::EnPassant});
+                    // edgeSquare ekle
+                    EdgeSquare edgeSquare;
+                    edgeSquare.color = piece->getColor();
+                    edgeSquare.pieceType = piece->getType();
+                    edgeSquare.from = from.toString();
+                    edgeSquare.type = EdgeType::en_passant;
+                    edgeSquare.result = MoveResult::EnPassant;
+                    edgeSquareCache[Position{to.x, to.y + (color == "white" ? 1 : -1)}.toString()].push_back(edgeSquare);
+                    std::cout << "edgeSquareCache'e en_passant hareketi eklendi " << Position{to.x, to.y + (color == "white" ? 1 : -1)}.toString() << "  "  << from.toString() << " " << int(edgeSquare.result) << " " << edgeSquare.pieceType << " " << edgeSquare.color << std::endl;
+                }
+                else{
+                    edges.push_back({from.toString(), to.toString(), EdgeType::is_enemy, MoveResult::Free});
+                    
+                }
+            }
         }
     }
+
     // piece al mapten 
     if(piece->getType() == "Rook") {
         // şimdi rengine göre bakalım castling için
@@ -322,6 +359,7 @@ void MoveValidator::updateEdgeMoveCache(const Position &from, const Position &to
             if(edge_node->type == EdgeType::is_enemy) {
                 first_block = true;
             }
+
             updateEdgeMoveCache(from, newPos, newDepth, first_block);
         }
         if (board->isValidPosition(newPos2) && !visitedPaths[fromStr][newPos2.toString()]) {

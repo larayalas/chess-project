@@ -14,6 +14,7 @@ private:
     int boardSize;
     std::string currentPlayer;
     bool gameOver;
+    int turn;
 
 public:
     // Constructor

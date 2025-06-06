@@ -340,6 +340,9 @@ int main(int argc, char* argv[]) {
             case MoveResult::Promotion:
                 std::cout << "Taş yükseltildi!" << std::endl;
                 break;
+            case MoveResult::EnPassant:
+                std::cout << "En passant yapıldı!" << std::endl;
+                break;
             default:
                 std::cout << "Bilinmeyen sonuç!" << std::endl;
                 continue;

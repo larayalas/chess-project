@@ -6,6 +6,7 @@
 
 GameManager::GameManager() : boardSize(8), currentPlayer("white"), gameOver(false) {
     configReader = std::make_shared<ConfigReader>();
+    turn = 0;
 }
 
 bool GameManager::initialize(const std::string& configFilePath) {
@@ -92,7 +93,7 @@ MoveResult GameManager::makeMove(const Position& from, const Position& to) {
     }
     
     // Hareketi yap
-    MoveResult result = board->movePiece(from, to);
+    MoveResult result = board->movePiece(from, to, turn);
     
     // Geçerli bir hareket yapıldıysa oyuncuyu değiştir
     if (result == MoveResult::ValidMove || result == MoveResult::EnemyPieceCapturable) {
@@ -107,6 +108,7 @@ MoveResult GameManager::makeMove(const Position& from, const Position& to) {
         
         // Oyuncuyu değiştir
         switchPlayer();
+        turn++;
     }
     
     return result;

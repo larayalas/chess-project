@@ -21,6 +21,8 @@ struct MoveRecord {
     Position to;
     std::string color;
     std::string type_piece;
+    MoveResult result;
+    int turn;
 };
 
 // Graf düğümü olarak satranç tahtasındaki kare
@@ -66,6 +68,7 @@ private:
     void clearCache();
     
 public:
+    int turn;
     // Hazır taşlarla constructor
     ChessBoard(int size, const std::vector<std::shared_ptr<chessPieces>>& pieces);
     // Destructor
@@ -102,8 +105,10 @@ public:
     std::unordered_map<std::string, Portal> getPortals() const;
     
     // Taş hareket ettirme
-    MoveResult movePiece(const Position& from, const Position& to);
+    MoveResult movePiece(const Position& from, const Position& to, int turn);
     
+    std::vector<MoveRecord> getMoveHistoryPosition(Position pos);
+
     // Şah ve şahmat kontrolleri
     bool isCheckmate(const std::string& color);
 

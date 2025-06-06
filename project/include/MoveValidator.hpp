@@ -35,7 +35,8 @@ enum class MoveResult
     NoPieceAtSource,
     Portal,
     Castling,
-    Promotion
+    Promotion,
+    EnPassant
 };
 enum class EdgeType
 {
@@ -44,7 +45,8 @@ enum class EdgeType
     is_enemy,
     is_portal,
     is_free,
-    is_me
+    is_me,
+    en_passant
 };
 
 struct Edge {

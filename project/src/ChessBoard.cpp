@@ -168,113 +168,111 @@ std::unordered_map<std::string, Portal> ChessBoard::getPortals() const {
 }
 
 
-// Taş hareket ettirme
-MoveResult ChessBoard::movePiece(const Position& from, const Position& to) {
+MoveResult ChessBoard::movePiece(const Position& from, const Position& to, int turn) {
+    MoveResult finalResult = MoveResult::InvalidMovePattern;
+
     if (!moveValidator) {
-        return MoveResult::InvalidMovePattern;
+        return finalResult;
     }
-    
-    MoveResult result = moveValidator->isValidMove(from, to);
-    std::cout << "result: " << int(result) << std::endl;
-    if(result == MoveResult::Castling) {
-        // kaleti direk istenilen konuam göttür
+
+    this->turn = turn;
+    finalResult = moveValidator->isValidMove(from, to);
+    std::cout << "result: " << int(finalResult) << std::endl;
+
+    if (finalResult == MoveResult::Castling) {
         auto piece = getPieceAt(from);
         if (!piece) {
-            return MoveResult::NoPieceAtSource;
+            finalResult = MoveResult::NoPieceAtSource;
+        } else {
+            board.erase(positionToKey(from));
+            board[positionToKey(to)] = piece;
+            piece->setPosition(to);
+
+            auto kingPosition = this->getKingPosition(piece->getColor());
+            auto king = getPieceAt(kingPosition);
+
+            if (!king) {
+                finalResult = MoveResult::NoPieceAtSource;
+            } else {
+                board.erase(positionToKey(kingPosition));
+                Position newKingPos = (from.x < to.x) ? Position{2, to.y} : Position{6, to.y};
+                board[positionToKey(newKingPos)] = king;
+                king->setPosition(newKingPos);
+
+                move_history.push_back({from, to, piece->getColor(), piece->getType(), finalResult, turn});
+            }
         }
-        // taşı yeni konuma taşı
+    }
+    else if (finalResult == MoveResult::EnPassant) {
+        auto piece = getPieceAt(from);
+        // from ile to arasındaki taşı sil
+        board.erase(positionToKey(Position{to.x, from.y}));
+        // fromdan to ya taşı kopyala
         board.erase(positionToKey(from));
         board[positionToKey(to)] = piece;
         piece->setPosition(to);
 
-        // soldan sağa castling
-        auto kingPosition = this->getKingPosition(piece->getColor());
-        if(from.x < to.x) {
-            auto king = getPieceAt(kingPosition);
-            if (!king) {
-                return MoveResult::NoPieceAtSource;
-            }
-            board.erase(positionToKey(kingPosition));
-            board[positionToKey(Position{2,to.y})] = king;
-            king->setPosition(Position{2,to.y});
-        }
-        else {
-            auto kingPosition = this->getKingPosition(piece->getColor());
-            auto king = getPieceAt(kingPosition);
-            if (!king) {
-                return MoveResult::NoPieceAtSource;
-            }
-            board.erase(positionToKey(kingPosition));
-            board[positionToKey(Position{6,to.y})] = king;
-            king->setPosition(Position{6,to.y});
-        }
-        return result;
+        move_history.push_back({from, to, piece->getColor(), piece->getType(), finalResult, turn});
     }
-    if (result == MoveResult::ValidMove || result == MoveResult::EnemyPieceCapturable) {
-        // Hedef konumdaki taşı kaldır (eğer varsa)
+    else if (finalResult == MoveResult::ValidMove || finalResult == MoveResult::EnemyPieceCapturable) {
         std::string toKey = positionToKey(to);
         std::string fromKey = positionToKey(from);
-        
+
         auto piece = getPieceAt(from);
         if (!piece) {
-            return MoveResult::NoPieceAtSource;
-        }
-        
-        // Hedefte düşman taşı varsa, tüm taşlar listesinden kaldır
-        if (board.find(toKey) != board.end()) {
-            auto targetPiece = board[toKey];
-            auto it = std::find(allPieces.begin(), allPieces.end(), targetPiece);
-            if (it != allPieces.end()) {
-                allPieces.erase(it);
-            }
-        }
-        
-        // Taşı yeni konuma taşı
-        board.erase(fromKey);
-        board[toKey] = piece;
-        piece->setPosition(to);
-        
-        if(to.y == (piece->getColor() == "white" ? boardSize - 1 : 0) && piece->getSpecialAbilities().promotion) {
-            // kullancıya sor
-            std::string promotion;
-            // tüm taşlarıı dolaş unique taş tiplerini yazdır
-            std::set<std::string> uniqueTypes;
-            for(const auto& p : allPieces) {
-                uniqueTypes.insert(p->getType());
-            }
-            std::cout << "Promotion: Hangi tip taşa çevirmek istiyorsunuz? (";
-            for(const auto& type : uniqueTypes) {
-                std::cout << type << ", ";
-            }
-            std::cout << ")" << std::endl;
-            std::cin >> promotion;
-            // temp taş oluştur
-            chessPieces tempPiece = {promotion, piece->getColor(), piece->getPosition(), piece->getSpecialAbilities()}; 
-            // tüm taşşları tara ilk aranan tipi bul
-            for(const auto& p : allPieces) {
-                if(p->getType() == promotion) {
-                    tempPiece.setMovement(p->getMovement());
-                    tempPiece.setType(p->getType());
-                    tempPiece.setSpecialAbilities(p->getSpecialAbilities());
-
-                    break;
+            finalResult = MoveResult::NoPieceAtSource;
+        } else {
+            if (board.find(toKey) != board.end()) {
+                auto targetPiece = board[toKey];
+                auto it = std::find(allPieces.begin(), allPieces.end(), targetPiece);
+                if (it != allPieces.end()) {
+                    allPieces.erase(it);
                 }
             }
-            // elimizdeki taşın özelliklerini değiştir
-            piece->setType(tempPiece.getType());
-            piece->setSpecialAbilities(tempPiece.getSpecialAbilities());
-            piece->setMovement(tempPiece.getMovement());
-            result = MoveResult::Promotion;        
+
+            board.erase(fromKey);
+            board[toKey] = piece;
+            piece->setPosition(to);
+
+            if (to.y == (piece->getColor() == "white" ? boardSize - 1 : 0) && piece->getSpecialAbilities().promotion) {
+                std::string promotion;
+                std::set<std::string> uniqueTypes;
+                for (const auto& p : allPieces) {
+                    uniqueTypes.insert(p->getType());
+                }
+
+                std::cout << "Promotion: Hangi tip taşa çevirmek istiyorsunuz? (";
+                for (const auto& type : uniqueTypes) {
+                    std::cout << type << ", ";
+                }
+                std::cout << ")" << std::endl;
+                std::cin >> promotion;
+
+                chessPieces tempPiece = {promotion, piece->getColor(), piece->getPosition(), piece->getSpecialAbilities()};
+                for (const auto& p : allPieces) {
+                    if (p->getType() == promotion) {
+                        tempPiece.setMovement(p->getMovement());
+                        tempPiece.setType(p->getType());
+                        tempPiece.setSpecialAbilities(p->getSpecialAbilities());
+                        break;
+                    }
+                }
+
+                piece->setType(tempPiece.getType());
+                piece->setSpecialAbilities(tempPiece.getSpecialAbilities());
+                piece->setMovement(tempPiece.getMovement());
+
+                finalResult = MoveResult::Promotion;
+            }
+
+            move_history.push_back({from, to, piece->getColor(), piece->getType(), finalResult, turn});
+
+            clearCache();
         }
 
-        // Cache'i temizle - tahta değişti
-        clearCache();
-        
-        return result;
     }
-    
 
-    return result;
+    return finalResult;
 }
 
 // Bir taşın gidebileceği tüm pozisyonları hesaplama
@@ -352,4 +350,15 @@ std::vector<std::shared_ptr<chessPieces>> ChessBoard::getPiecesByName(const std:
         }
     }
     return pieces;
+}
+
+std::vector<MoveRecord> ChessBoard::getMoveHistoryPosition(Position pos) {
+    std::vector<MoveRecord> moves;
+    for(const auto& move : move_history) {
+        std::cout << "move.to: " << move.to.toString() << " " << pos.toString() << std::endl;
+        if(move.to == pos) {
+            moves.push_back(move);
+        }
+    }
+    return moves;
 }
